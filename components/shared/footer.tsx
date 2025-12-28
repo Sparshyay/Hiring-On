@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
     return (
@@ -6,7 +7,10 @@ export function Footer() {
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
-                        <h3 className="text-lg font-bold text-slate-900">HIRING-ON</h3>
+                        <div className="flex items-center gap-0">
+                            <Image src="/logo.svg" alt="Logo" width={100} height={100} className="h-24 w-24" />
+                            <Image src="/hiring-on.svg" alt="HIRING-ON" width={300} height={100} className="h-28 w-auto" />
+                        </div>
                         <p className="text-sm text-muted-foreground">
                             Connecting talent with opportunity. The modern platform for job seekers and recruiters.
                         </p>

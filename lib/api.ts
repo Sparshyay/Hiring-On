@@ -18,6 +18,11 @@ export const useGetJob = (id: string) => {
     return useQuery(api.jobs.getById, { id });
 };
 
+export const useGetInternship = (id: string) => {
+    // @ts-ignore
+    return useQuery(api.internships.getById, { id });
+};
+
 export const useCreateJob = () => {
     return useMutation(api.jobs_mutations.create);
 };
@@ -27,7 +32,7 @@ export const useUpdateJobStatus = () => {
 };
 
 export const useGetUser = () => {
-    return useQuery(api.users.getUser);
+    return useQuery(api.auth.getUser);
 };
 
 export const useCreateUser = () => {
@@ -44,4 +49,12 @@ export const useCreateCompany = () => {
 
 export const useUpdateCompanyStatus = () => {
     return useMutation(api.companies.updateStatus);
+};
+
+export const useUpdateProfile = () => {
+    return useMutation(api.users.updateProfile);
+};
+
+export const useCheckProfileCompletion = () => {
+    return useQuery(api.users.checkProfileCompletion);
 };

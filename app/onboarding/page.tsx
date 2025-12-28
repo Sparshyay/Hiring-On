@@ -13,32 +13,39 @@ import { Upload, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function OnboardingPage() {
     const { user, isLoaded } = useUser();
-    const { isAuthenticated } = useConvexAuth();
     const router = useRouter();
-    const convexUser = useQuery(api.users.getUser);
+    const convexUser = useQuery(api.auth.getUser);
+    const profileCompletion = useQuery(api.users.checkProfileCompletion);
     const createUser = useMutation(api.users.createUser);
     const updateResume = useMutation(api.users.updateResume);
 
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [hasRedirected, setHasRedirected] = useState(false);
+
+    // Check if user is authenticated (using Clerk)
+    const isAuthenticated = isLoaded && !!user;
 
     useEffect(() => {
-        if (isLoaded && isAuthenticated && user && convexUser === null) {
+        if (isAuthenticated && convexUser === null) {
             // Create user in Convex if not exists
+            console.log("Creating user in Convex from onboarding...");
             createUser({
                 name: user.fullName || user.username || "User",
                 email: user.primaryEmailAddress?.emailAddress || "",
             });
         }
-    }, [isLoaded, isAuthenticated, user, convexUser, createUser]);
+    }, [isAuthenticated, user, convexUser, createUser]);
 
     useEffect(() => {
-        if (convexUser && convexUser.resume) {
-            // If user already has a resume, redirect to dashboard
-            router.push("/dashboard");
+        // Only redirect if profile is complete AND we haven't redirected yet
+        if (profileCompletion?.isComplete && !hasRedirected && !isSubmitting) {
+            console.log("Profile complete, redirecting to practice...");
+            setHasRedirected(true);
+            router.push("/practice");
         }
-    }, [convexUser, router]);
+    }, [profileCompletion, router, hasRedirected, isSubmitting]);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -73,23 +80,40 @@ export default function OnboardingPage() {
         setResumeFile(file);
     };
 
-    const handleResumeUpload = async () => {
-        if (!resumeFile) return;
+    const handleSubmit = async () => {
+        if (!resumeFile) {
+            alert("Please upload a resume first");
+            return;
+        }
+
+        if (!isAuthenticated) {
+            alert("Please wait while authentication completes...");
+            return;
+        }
+
+        if (!convexUser) {
+            alert("Please wait while we set up your account...");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            // In a real app, you would upload the file to storage (AWS S3, Convex Storage, etc.)
-            // and get a URL back. For this demo, we'll simulate a URL or use a placeholder.
-            // Since we can't actually upload to storage without backend config, 
-            // we will simulate the process and save a fake URL or use a data URI if small.
+            // In a production app, you would upload the file to storage (S3, Convex storage, etc.)
+            // For now, we'll just store the filename as a placeholder
+            const resumeUrl = `resumes/${user?.id}/${resumeFile.name}`;
 
-            // For mostly frontend demo purposes involving Convex text storage:
-            const fakeUrl = `https://example.com/resumes/${resumeFile.name}`;
+            console.log("Uploading resume:", resumeFile.name);
+            await updateResume({ resume: resumeUrl });
 
-            await updateResume({ resume: fakeUrl });
-            router.push("/dashboard");
+            console.log("Resume uploaded successfully, redirecting to profile edit...");
+
+            // Small delay to ensure state updates
+            setTimeout(() => {
+                router.push("/profile/edit");
+            }, 500);
         } catch (error) {
-            console.error("Failed to update resume:", error);
-        } finally {
+            console.error("Error uploading resume:", error);
+            alert("Failed to upload resume. Please try again.\n\nError: " + (error as Error).message);
             setIsSubmitting(false);
         }
     };
@@ -148,11 +172,22 @@ export default function OnboardingPage() {
 
                     <Button
                         className="w-full bg-primary hover:bg-orange-600 text-white"
-                        onClick={handleResumeUpload}
-                        disabled={!resumeFile || isSubmitting || !isAuthenticated}
+                        onClick={handleSubmit}
+                        disabled={!resumeFile || isSubmitting || !isAuthenticated || !convexUser}
                     >
-                        {isSubmitting ? "Saving..." : !isAuthenticated ? "Authenticating..." : "Continue to Dashboard"}
-                        {!isSubmitting && <ArrowRight className="ml-2 w-4 h-4" />}
+                        {isSubmitting ? (
+                            <>
+                                <span className="animate-pulse">Uploading Resume...</span>
+                            </>
+                        ) : !isAuthenticated ? (
+                            "Authenticating..."
+                        ) : !convexUser ? (
+                            "Setting up account..."
+                        ) : (
+                            <>
+                                Continue <ArrowRight className="ml-2 w-4 h-4" />
+                            </>
+                        )}
                     </Button>
                 </CardContent>
             </Card>

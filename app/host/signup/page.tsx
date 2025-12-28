@@ -123,7 +123,7 @@ export default function HostSignupPage() {
                         {step === 2 && (
                             <div className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Starter Plan */}
+                                    {/* Starter Plan - Enabled */}
                                     <div
                                         className={`relative border rounded-3xl p-8 cursor-pointer transition-all bg-white hover:shadow-xl ${formData.plan === "Starter" ? "ring-2 ring-slate-900 border-transparent shadow-xl" : "border-slate-200"}`}
                                         onClick={() => setFormData({ ...formData, plan: "Starter" })}
@@ -136,7 +136,14 @@ export default function HostSignupPage() {
                                         <p className="mt-4 text-muted-foreground">For new companies just starting to hire.</p>
 
                                         <div className="mt-8">
-                                            <Button className="w-full rounded-full bg-slate-900 hover:bg-slate-800 text-white h-12 flex items-center justify-between px-6 group">
+                                            <Button
+                                                className="w-full rounded-full bg-slate-900 hover:bg-slate-800 text-white h-12 flex items-center justify-between px-6 group"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setFormData({ ...formData, plan: "Starter" });
+                                                    setStep(3);
+                                                }}
+                                            >
                                                 Select Plan
                                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                                             </Button>
@@ -155,13 +162,10 @@ export default function HostSignupPage() {
                                         </div>
                                     </div>
 
-                                    {/* Pro Plan */}
-                                    <div
-                                        className={`relative border rounded-3xl p-8 cursor-pointer transition-all bg-white hover:shadow-xl ${formData.plan === "Pro" ? "ring-2 ring-slate-900 border-transparent shadow-xl" : "border-slate-200"}`}
-                                        onClick={() => setFormData({ ...formData, plan: "Pro" })}
-                                    >
-                                        <div className="absolute top-8 right-8 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                            Popular
+                                    {/* Pro Plan - Disabled */}
+                                    <div className="relative border rounded-3xl p-8 opacity-60 bg-slate-50 cursor-not-allowed border-slate-200">
+                                        <div className="absolute top-4 right-4 bg-slate-200 text-slate-600 text-xs font-bold px-3 py-1 rounded-full">
+                                            Coming Soon
                                         </div>
                                         <h3 className="font-medium text-lg text-slate-900">Pro Plan</h3>
                                         <div className="mt-4 flex items-baseline gap-1">
@@ -171,18 +175,18 @@ export default function HostSignupPage() {
                                         <p className="mt-4 text-muted-foreground">For growing teams hiring frequently.</p>
 
                                         <div className="mt-8">
-                                            <Button className="w-full rounded-full bg-slate-900 hover:bg-slate-800 text-white h-12 flex items-center justify-between px-6 group">
+                                            <Button disabled className="w-full rounded-full bg-slate-200 text-slate-400 h-12 flex items-center justify-between px-6">
                                                 Select Plan
-                                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                                <ArrowRight className="w-4 h-4" />
                                             </Button>
                                         </div>
 
                                         <div className="mt-8 space-y-4">
                                             <p className="font-medium text-sm">Features included:</p>
                                             <ul className="space-y-3 text-sm text-muted-foreground">
-                                                {["10 Active Job Posts", "Advanced Analytics", "Priority Email Support", "AI Resume Shortlisting", "24 hour review time"].map((f) => (
+                                                {["10 Active Job Posts", "Advanced Analytics", "Priority Email Support", "AI Resume Shortlisting"].map((f) => (
                                                     <li key={f} className="flex items-start gap-3">
-                                                        <span className="text-orange-500 font-bold mt-0.5">✶</span>
+                                                        <span className="text-slate-400 font-bold mt-0.5">✶</span>
                                                         {f}
                                                     </li>
                                                 ))}
@@ -191,7 +195,7 @@ export default function HostSignupPage() {
                                     </div>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-sm text-muted-foreground">Need a custom enterprise plan? <a href="#" className="text-primary hover:underline">Contact Sales</a></p>
+                                    <p className="text-sm text-muted-foreground">Enterprise plans are currently invite-only.</p>
                                 </div>
                             </div>
                         )}
@@ -200,15 +204,15 @@ export default function HostSignupPage() {
                             <div className="space-y-6 text-center">
                                 <div className="p-6 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                                     <CreditCard className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-                                    <p className="font-medium">Payment Gateway Simulation</p>
-                                    <p className="text-sm text-muted-foreground">No actual charge will be made.</p>
+                                    <p className="font-medium">No Payment Required</p>
+                                    <p className="text-sm text-muted-foreground">The Starter plan is completely free.</p>
                                 </div>
-                                <div className="flex justify-between items-center p-4 bg-blue-50 text-blue-800 rounded-lg">
+                                <div className="flex justify-between items-center p-4 bg-green-50 text-green-800 rounded-lg">
                                     <span className="font-bold">Selected Plan: {formData.plan}</span>
-                                    <span>{formData.plan === "Starter" ? "₹0/mo" : "₹4,999/mo"}</span>
+                                    <span>₹0/mo</span>
                                 </div>
                                 <Button onClick={handleSubmit} className="w-full bg-primary hover:bg-orange-600 text-white" disabled={isLoading}>
-                                    {isLoading ? "Processing..." : "Complete Purchase & Signup"}
+                                    {isLoading ? "Setting up Dashboard..." : "Complete Signup"}
                                 </Button>
                             </div>
                         )}
@@ -219,13 +223,15 @@ export default function HostSignupPage() {
                                     <ShieldCheck className="w-10 h-10" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-slate-900">Submission Received!</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900">Welcome Aboard!</h2>
                                     <p className="text-muted-foreground mt-2">
-                                        Your account is currently pending verification by our admin team.
-                                        You will receive an email once approved.
+                                        Your company account has been created successfully.
+                                        You now have full access to the recruiter dashboard.
                                     </p>
                                 </div>
-                                <Button variant="outline" onClick={() => router.push("/")}>Return to Home</Button>
+                                <Button className="w-full bg-primary hover:bg-orange-600 text-white" onClick={() => router.push("/recruiter")}>
+                                    Go to Recruiter Dashboard
+                                </Button>
                             </div>
                         )}
                     </CardContent>

@@ -12,17 +12,42 @@ interface JobCardProps {
     location: string;
     type: string;
     salary: string;
+    salaryDuration?: string;
     tags: string[];
     logo?: string;
     variant?: "grid" | "list";
+    applicationDeadline?: number;
+    postedAt?: number;
+    isFeatured?: boolean;
 }
 
-export function JobCard({ id, title, company, location, type, salary, tags, variant = "grid" }: JobCardProps) {
+function getDaysLeft(deadline: number | undefined) {
+    if (!deadline) return null;
+    const diff = deadline - Date.now();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return days > 0 ? days : 0;
+}
+
+function timeAgo(date: number | undefined) {
+    if (!date) return "Recently";
+    const seconds = Math.floor((Date.now() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + "y ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    return "Recently";
+}
+
+export function JobCard({ id, title, company, location, type, salary, salaryDuration, tags, variant = "grid", applicationDeadline, postedAt, isFeatured, logo }: JobCardProps) {
     // Mock data to match the UI requirement since backend doesn't provide all these yet
     const experience = "0-2 years";
-    const postedDate = "Posted 2 days ago";
-    const daysLeft = "10 days left";
+    const postedDate = timeAgo(postedAt);
+    const daysLeft = getDaysLeft(applicationDeadline);
     const applicants = "100+ Applied";
+
+    const formattedSalary = salaryDuration === 'month' ? `${salary}/mo` : salary;
 
     if (variant === "list") {
         return (
@@ -84,9 +109,11 @@ export function JobCard({ id, title, company, location, type, salary, tags, vari
                             <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md">
                                 Everyone can apply
                             </span>
-                            <span className="flex items-center gap-1 text-slate-400">
-                                <Hourglass className="w-3 h-3" /> {daysLeft}
-                            </span>
+                            {daysLeft !== null && (
+                                <span className={`flex items-center gap-1 ${daysLeft < 5 ? 'text-red-500' : 'text-slate-400'}`}>
+                                    <Hourglass className="w-3 h-3" /> {daysLeft} days left
+                                </span>
+                            )}
                             <span className="flex items-center gap-1 text-slate-400">
                                 <Users className="w-3 h-3" /> {applicants}
                             </span>
@@ -94,7 +121,7 @@ export function JobCard({ id, title, company, location, type, salary, tags, vari
 
                         <div className="flex items-center gap-4">
                             <span className="font-bold text-slate-900 text-base">
-                                {salary}
+                                {formattedSalary}
                             </span>
                             <div className="flex gap-2 items-center">
                                 <Share2 className="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-600" />
@@ -111,10 +138,26 @@ export function JobCard({ id, title, company, location, type, salary, tags, vari
 
     // Grid View (Compact)
     return (
-        <Card className="group hover:bg-slate-50/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-slate-200 hover:border-primary/20 h-full flex flex-col p-5 bg-white relative">
-            <button className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
+        <Card className={cn(
+            "group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full flex flex-col p-5 bg-white relative overflow-hidden border",
+            isFeatured ? "border-primary ring-1 ring-primary/20 bg-primary/[0.02]" : "border-slate-200 hover:border-primary/20 hover:bg-slate-50/50"
+        )}>
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+            {/* Company Logo Background */}
+            <div className="absolute top-0 right-0 w-full h-32 overflow-hidden pointer-events-none opacity-[0.03]">
+                {company && <div className="text-[10rem] font-bold text-slate-900 absolute -top-10 -right-10 select-none">{company[0]}</div>}
+            </div>
+
+            <button className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors z-10">
                 <Heart className="w-5 h-5" />
             </button>
+
+            {isFeatured && (
+                <div className="absolute top-0 left-0 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg z-10">
+                    FEATURED
+                </div>
+            )}
             <div className="flex items-start gap-4 mb-4">
                 <div className="h-14 w-14 rounded-xl border border-slate-100 bg-white flex items-center justify-center text-xl font-bold text-slate-700 shadow-sm">
                     {company[0]}
@@ -158,7 +201,7 @@ export function JobCard({ id, title, company, location, type, salary, tags, vari
 
             <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-900">
-                    {salary}
+                    {formattedSalary}
                 </span>
                 <Button size="sm" className="bg-primary hover:bg-orange-600 text-white rounded-full px-6" asChild>
                     <Link href={`/jobs/${id}`}>Apply</Link>
@@ -166,7 +209,7 @@ export function JobCard({ id, title, company, location, type, salary, tags, vari
             </div>
             <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
                 <span>{postedDate}</span>
-                <span>{applicants}</span>
+                {daysLeft && <span>{daysLeft} days left</span>}
             </div>
         </Card>
     );

@@ -88,8 +88,8 @@ export function ProfileDropdown() {
                             <div className="flex-1 min-w-0 pt-1">
                                 <h3 className="font-bold text-lg truncate leading-tight">{user.fullName}</h3>
                                 <p className="text-sm text-slate-500 truncate mb-1">{user.primaryEmailAddress?.emailAddress}</p>
-                                <Link href="/profile" className="text-blue-600 font-semibold text-sm flex items-center hover:underline">
-                                    View Profile <ChevronRight className="w-4 h-4 ml-0.5" />
+                                <Link href="/profile/edit" className="text-blue-600 font-semibold text-sm flex items-center hover:underline">
+                                    Edit Profile <ChevronRight className="w-4 h-4 ml-0.5" />
                                 </Link>
                             </div>
                         </div>

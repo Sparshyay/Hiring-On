@@ -1,26 +1,36 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-
-const isProtectedRoute = createRouteMatcher([
-    '/dashboard(.*)',
-    '/profile(.*)',
-    '/onboarding(.*)',
-    '/practice/(.*)', // Protect specific practice tests
-])
+import { NextResponse } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
     '/',
-    '/jobs(.*)',
-    '/companies(.*)',
-    '/events(.*)',
-    '/blogs(.*)',
     '/sign-in(.*)',
     '/sign-up(.*)',
-    '/host/signup(.*)', // Allow host signup to be public initially
-    '/api/uploadthing(.*)' // If using uploadthing
+    '/jobs(.*)',
+    '/api(.*)',
+    '/blogs(.*)',
+    '/contact',
+    '/about',
+    '/terms',
+    '/privacy',
 ])
 
-export default clerkMiddleware(async (auth, req) => {
-    if (isProtectedRoute(req)) await auth.protect()
+const isRecruiterRoute = createRouteMatcher(['/recruiter(.*)'])
+const isAdminRoute = createRouteMatcher(['/admin(.*)'])
+
+export default clerkMiddleware(async (auth, request) => {
+    if (!isPublicRoute(request)) {
+        await auth.protect()
+    }
+
+    // We can add custom role based redirection logic here if we have the role in the session claims
+    // For now, we rely on the client-side/layout checks as well, but basic auth is enforced here.
+    // Ideally, we sync role to Clerk publicMetadata to enforce it here.
+
+    // Example of role enforcement if we had metadata:
+    // const { sessionClaims } = await auth()
+    // const role = sessionClaims?.metadata?.role
+
+    // Keeping it simple for now: valid session for non-public routes.
 })
 
 export const config = {

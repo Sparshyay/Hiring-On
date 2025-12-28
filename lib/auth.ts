@@ -1,11 +1,12 @@
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useGetUser } from "@/lib/api";
+import { useGetUser, useCheckProfileCompletion } from "@/lib/api";
 
 export function useProtectedAction() {
     const router = useRouter();
     const { isSignedIn, isLoaded } = useUser();
     const user = useGetUser();
+    const profileCompletion = useCheckProfileCompletion();
 
     const verifyAccess = (actionName: string = "perform this action") => {
         if (!isLoaded) return false;
@@ -17,11 +18,19 @@ export function useProtectedAction() {
             return false;
         }
 
-        if (user === undefined) return false; // Loading Convex user
+        if (user === undefined || profileCompletion === undefined) return false; // Loading Convex user
 
-        if (!user || !user.resume) {
+        if (!user) {
             if (confirm(`You need to complete your profile to ${actionName}. Go to onboarding?`)) {
                 router.push("/onboarding");
+            }
+            return false;
+        }
+
+        // Check if profile is complete
+        if (!profileCompletion?.isComplete) {
+            if (confirm(`You need to complete your profile to ${actionName}. Complete your profile?`)) {
+                router.push("/profile/edit");
             }
             return false;
         }
@@ -29,5 +38,5 @@ export function useProtectedAction() {
         return true;
     };
 
-    return { verifyAccess, user, isSignedIn, isLoaded };
+    return { verifyAccess, user, isSignedIn, isLoaded, profileCompletion };
 }

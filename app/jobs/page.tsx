@@ -7,14 +7,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, SlidersHorizontal, LayoutGrid, List } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useSearchParams } from "next/navigation";
 import { useGetJobs } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { cn } from "@/lib/utils";
 
-export default function JobsPage() {
-    const jobs = useGetJobs();
+function JobsContent() {
+    const searchParams = useSearchParams();
+    const initialQuery = searchParams.get("search") || "";
+    const initialLocation = searchParams.get("location") || "";
+
+    const allJobs = useGetJobs();
     const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+    const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [locationQuery, setLocationQuery] = useState(initialLocation);
+
+    // Initial Filter to show only jobs (exclude internships)
+    // And Apply Search & Location Filters
+    const jobs = allJobs?.filter(job => {
+        const isJob = !job.type.toLowerCase().includes("intern");
+        if (!isJob) return false;
+
+        const matchesSearch = !searchQuery ||
+            job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.company?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        const matchesLocation = !locationQuery ||
+            job.location.toLowerCase().includes(locationQuery.toLowerCase());
+
+        return matchesSearch && matchesLocation;
+    })?.sort((a, b) => {
+        // Sort Featured First
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return 0;
+    }) || [];
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -29,6 +58,8 @@ export default function JobsPage() {
                                 <Input
                                     placeholder="Job title, skills, or company"
                                     className="border-none bg-transparent shadow-none focus-visible:ring-0 h-full text-base placeholder:text-slate-400 p-0"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
                             <div className="flex-1 flex items-center px-6 h-14 w-full md:w-auto">
@@ -36,6 +67,8 @@ export default function JobsPage() {
                                 <Input
                                     placeholder="City, state, or remote"
                                     className="border-none bg-transparent shadow-none focus-visible:ring-0 h-full text-base placeholder:text-slate-400 p-0"
+                                    value={locationQuery}
+                                    onChange={(e) => setLocationQuery(e.target.value)}
                                 />
                             </div>
                             <Button size="lg" className="h-12 px-8 rounded-full bg-primary hover:bg-orange-600 text-white font-medium text-base shadow-lg shadow-orange-200 min-w-[140px] m-1">
@@ -153,9 +186,13 @@ export default function JobsPage() {
                                         location={job.location}
                                         type={job.type}
                                         salary={job.salary}
+                                        salaryDuration={job.salaryDuration}
                                         tags={job.tags}
-                                        logo={job.company?.logo}
+                                        logo={job.logoUrl || job.company?.logo}
                                         variant={viewMode}
+                                        applicationDeadline={job.applicationDeadline}
+                                        postedAt={job.postedAt}
+                                        isFeatured={job.isFeatured}
                                     />
                                 ))
                             )}
@@ -177,5 +214,17 @@ export default function JobsPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function JobsPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <JobsContent />
+        </Suspense>
     );
 }

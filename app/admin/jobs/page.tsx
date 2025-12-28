@@ -1,105 +1,126 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Eye } from "lucide-react";
-import { useGetJobs, useUpdateJobStatus } from "@/lib/api";
+import { Loader2, Eye, Calendar } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { format } from "date-fns";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { useState } from "react";
 
-export default function JobManagementPage() {
-    const jobs = useGetJobs();
-    const updateStatus = useUpdateJobStatus();
+export default function JobsMonitorPage() {
+    const jobs = useQuery(api.jobs.getAllJobsAdmin);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState<Record<string, string>>({});
 
-    const handleApprove = async (id: string) => {
-        // @ts-ignore
-        await updateStatus({ id, status: "Active" });
-    };
+    const filteredJobs = jobs?.filter(job => {
+        const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.companyName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = !filters["status"] || job.status === filters["status"];
+        return matchesSearch && matchesStatus;
+    });
 
-    const handleReject = async (id: string) => {
-        // @ts-ignore
-        await updateStatus({ id, status: "Rejected" });
-    };
+    if (jobs === undefined) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Job Management</h1>
-                    <p className="text-muted-foreground">Review and manage job postings.</p>
-                </div>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Jobs Monitor</h1>
+                <p className="text-muted-foreground">
+                    Monitor all job postings across the platform.
+                </p>
             </div>
+
+            <FilterBar
+                onSearchChange={setSearchQuery}
+                onFilterChange={setFilters}
+                searchPlaceholder="Search jobs or companies..."
+                filterGroups={[
+                    {
+                        id: "status",
+                        label: "Status",
+                        options: [
+                            { label: "Active", value: "Active" },
+                            { label: "Closed", value: "Closed" },
+                            { label: "Pending", value: "Pending" }
+                        ]
+                    }
+                ]}
+            />
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Job Postings</CardTitle>
+                    <CardTitle>All Jobs</CardTitle>
+                    <CardDescription>A list of all jobs posted by any recruiter.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Job Title</TableHead>
+                                <TableHead>Title</TableHead>
                                 <TableHead>Company</TableHead>
-                                <TableHead>Posted Date</TableHead>
+                                <TableHead>Location</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Posted Date</TableHead>
+                                <TableHead className="text-right">Stats</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {!jobs ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8">Loading jobs...</TableCell>
-                                </TableRow>
-                            ) : (
-                                jobs.map((job) => (
-                                    <TableRow key={job._id}>
-                                        <TableCell className="font-medium">{job.title}</TableCell>
-                                        <TableCell>{job.company?.name || "Unknown"}</TableCell>
-                                        <TableCell>{new Date(job.postedAt).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    job.status === "Active" ? "default" :
-                                                        job.status === "Pending" ? "secondary" : "destructive"
-                                                }
-                                                className={
-                                                    job.status === "Active" ? "bg-green-100 text-green-700 hover:bg-green-200" :
-                                                        job.status === "Pending" ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" :
-                                                            "bg-red-100 text-red-700 hover:bg-red-200"
-                                                }
-                                            >
-                                                {job.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button variant="ghost" size="icon">
-                                                    <Eye className="w-4 h-4" />
-                                                </Button>
-                                                {job.status === "Pending" && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                            onClick={() => handleApprove(job._id)}
-                                                        >
-                                                            <CheckCircle className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => handleReject(job._id)}
-                                                        >
-                                                            <XCircle className="w-4 h-4" />
-                                                        </Button>
-                                                    </>
-                                                )}
+                            {filteredJobs?.map((job) => (
+                                <TableRow key={job._id}>
+                                    <TableCell className="font-medium">{job.title}</TableCell>
+                                    <TableCell>{job.companyName}</TableCell>
+                                    <TableCell>{job.location}</TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={
+                                                job.status === "Active"
+                                                    ? "default"
+                                                    : job.status === "Closed"
+                                                        ? "secondary"
+                                                        : "outline"
+                                            }
+                                        >
+                                            {job.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center text-sm text-muted-foreground">
+                                            <Calendar className="mr-2 h-3 w-3" />
+                                            {format(job.postedAt, "MMM d, yyyy")}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex justify-end gap-4 text-sm text-muted-foreground">
+                                            <div className="flex items-center">
+                                                <Eye className="mr-1 h-3 w-3" />
+                                                {job.views || 0}
                                             </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {filteredJobs?.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                        No jobs found matching your filters.
+                                    </TableCell>
+                                </TableRow>
                             )}
                         </TableBody>
                     </Table>

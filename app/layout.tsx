@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   description: "The modern platform connecting top talent with world-class companies.",
 };
 
-import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
+import LayoutWrapper from "@/components/shared/layout-wrapper";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -29,14 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ConvexClientProvider>
-          <Navbar />
-          <main className="flex-1">
+          <LayoutWrapper>
             {children}
-          </main>
-          <Footer />
+          </LayoutWrapper>
+          <Toaster />
         </ConvexClientProvider>
       </body>
     </html>
