@@ -53,9 +53,17 @@ export default function MockTestPage() {
         if (test && stage === "test") {
             setTimeLeft(test.duration * 60);
         }
-        // Skip difficulty selection for standard tests (they have fixed difficulty)
-        if (test && test.type === "standard" && stage === "difficulty") {
-            setStage("loading");
+
+        // Skip difficulty selection if:
+        // 1. Test is "standard" type
+        // 2. Test already has a specific difficulty (Beginner/Intermediate/Expert)
+        if (test && stage === "difficulty") {
+            const isStandard = test.type === "standard" || test.type === "Skill Assessment";
+            const hasDifficulty = test.difficulty && ["Beginner", "Intermediate", "Expert"].includes(test.difficulty);
+
+            if (isStandard || hasDifficulty) {
+                setStage("loading");
+            }
         }
     }, [test, stage]);
 
@@ -156,7 +164,7 @@ export default function MockTestPage() {
         return (
             <Guidelines
                 title={test.title}
-                questionCount={test.questionCount}
+                questionCount={test.questionsCount}
                 duration={test.duration}
                 onStart={handleStartTest}
             />

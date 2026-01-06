@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, HelpCircle, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, HelpCircle, FileText, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,6 +15,8 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+import { useRouter } from "next/navigation";
+
 interface GuidelinesProps {
     title: string;
     questionCount: number;
@@ -23,9 +25,18 @@ interface GuidelinesProps {
 }
 
 export function Guidelines({ title, questionCount, duration, onStart }: GuidelinesProps) {
+    const router = useRouter();
+
     return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">
-            <div className="grid grid-cols-1 lg:grid-cols-2 w-full max-w-5xl gap-8 lg:gap-16 p-6">
+        <div className="relative flex min-h-screen items-center justify-center bg-slate-50 pb-10">
+            {/* Back Button (Mobile only) */}
+            <div className="absolute top-4 left-4 md:hidden">
+                <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-slate-500 hover:text-slate-900">
+                    <ArrowLeft className="w-5 h-5" />
+                </Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 w-full max-w-5xl gap-8 lg:gap-16 p-6 mt-12 md:mt-0">
 
                 {/* Left: Info Section */}
                 <div className="flex flex-col justify-center space-y-6">

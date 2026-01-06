@@ -6,6 +6,14 @@ import { QueryCtx } from "./_generated/server";
 async function fetchInternships(ctx: QueryCtx) {
     const internships = await ctx.db
         .query("internships")
+        .withIndex("by_status", (q) => q.eq("status", "Active"))
+        .filter((q) => {
+            const deadline = q.field("applicationDeadline");
+            return q.or(
+                q.eq(deadline, undefined),
+                q.gte(deadline, Date.now())
+            );
+        })
         .order("desc")
         .collect();
 
@@ -111,7 +119,10 @@ export const create = mutation({
             requirements: args.requirements,
             tags: args.tags,
 
-            applicationDeadline: args.applicationDeadline,
+            applicationDeadline: args.applicationDeadline
+                ? new Date(args.applicationDeadline).setHours(23, 59, 59, 999)
+                : undefined,
+
             workDays: args.workDays,
             workHours: args.workHours,
 

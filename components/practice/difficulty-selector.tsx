@@ -10,39 +10,25 @@ interface DifficultySelectorProps {
 
 const DIFFICULTIES = [
     {
-        id: "Novice",
-        label: "Novice",
+        id: "Beginner",
+        label: "Beginner",
         color: "text-emerald-500",
         bg: "bg-emerald-500",
         bars: 1
-    },
-    {
-        id: "Easy",
-        label: "Easy",
-        color: "text-green-500",
-        bg: "bg-green-500",
-        bars: 2
     },
     {
         id: "Intermediate",
         label: "Intermediate",
         color: "text-yellow-500",
         bg: "bg-yellow-500",
-        bars: 3
-    },
-    {
-        id: "Master",
-        label: "Master",
-        color: "text-orange-500",
-        bg: "bg-orange-500",
-        bars: 4
+        bars: 2
     },
     {
         id: "Expert",
         label: "Expert",
         color: "text-red-600",
         bg: "bg-red-600",
-        bars: 5
+        bars: 3
     }
 ];
 

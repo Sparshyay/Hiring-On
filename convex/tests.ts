@@ -44,22 +44,62 @@ export const getTests = query({
     },
 });
 
+export const getTopics = query({
+    args: {
+        search: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        let tests = await ctx.db
+            .query("tests")
+            .filter((q) => q.eq(q.field("status"), "Published"))
+            .collect();
+
+        if (args.search) {
+            const searchLower = args.search.toLowerCase();
+            tests = tests.filter(t => t.title.toLowerCase().includes(searchLower) || t.category.toLowerCase().includes(searchLower));
+        }
+
+        // Group by Category
+        const topicsMap = new Map();
+
+        for (const test of tests) {
+            if (!topicsMap.has(test.category)) {
+                topicsMap.set(test.category, {
+                    category: test.category,
+                    imageColor: test.imageColor,
+                    description: test.description,
+                    levels: [],
+                    totalQuestions: 0
+                });
+            }
+            const topic = topicsMap.get(test.category);
+            topic.levels.push({
+                id: test._id,
+                difficulty: test.difficulty, // "Beginner", "Intermediate", "Expert"
+                duration: test.duration,
+                questionsCount: test.questionsCount
+            });
+            topic.totalQuestions += test.questionsCount;
+        }
+
+        return Array.from(topicsMap.values());
+    },
+});
+
 export const getTestById = query({
     args: { testId: v.id("tests") },
     handler: async (ctx, args) => {
         const test = await ctx.db.get(args.testId);
         if (!test) return null;
 
-        // Also fetch questions count
-        const questions = await ctx.db
-            .query("questions")
-            .withIndex("by_test", (q) => q.eq("testId", args.testId))
-            .collect();
+        // Strip embedded questions for performance
+        const { questions, ...testMetadata } = test;
 
-        return {
-            ...test,
-            questionCount: questions.length
-        };
+        // Also fetch actual questions count from questions table if needed, 
+        // but test.questionsCount should be accurate from seed.
+        // We'll trust the metadata.
+
+        return testMetadata;
     },
 });
 
@@ -210,3 +250,35 @@ export const getTestAnalysis = query({
     },
 });
 
+
+export const getMyAttempts = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return [];
+
+        const user = await ctx.db
+            .query("job_seekers")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) return [];
+
+        const attempts = await ctx.db
+            .query("test_attempts")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+
+        const enriched = await Promise.all(attempts.map(async (a) => {
+            const test = await ctx.db.get(a.testId);
+            return {
+                ...a,
+                testTitle: test?.title || "Unknown Test",
+                testCategory: test?.category || "General",
+                testImageColor: test?.imageColor || "bg-blue-500",
+            };
+        }));
+
+        return enriched.sort((a, b) => b.startTime - a.startTime);
+    },
+});

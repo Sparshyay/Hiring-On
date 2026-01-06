@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const get = query({
@@ -6,7 +6,18 @@ export const get = query({
         limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const jobs = await ctx.db.query("jobs").order("desc").take(args.limit || 20);
+        const jobs = await ctx.db
+            .query("jobs")
+            .withIndex("by_status", (q) => q.eq("status", "active"))
+            .filter((q) => {
+                const deadline = q.field("applicationDeadline");
+                return q.or(
+                    q.eq(deadline, undefined),
+                    q.gte(deadline, Date.now())
+                );
+            })
+            .order("desc")
+            .take(args.limit || 20);
 
         // Join with company data and resolve URLs
         const jobsWithCompany = await Promise.all(
@@ -200,7 +211,10 @@ export const create = mutation({
             salary: args.salary,
             salaryDuration: args.salaryDuration || "year", // Default to year
 
-            applicationDeadline: args.applicationDeadline,
+            applicationDeadline: args.applicationDeadline
+                ? new Date(args.applicationDeadline).setHours(23, 59, 59, 999)
+                : undefined,
+
             workDays: args.workDays,
             workHours: args.workHours,
 
@@ -248,4 +262,32 @@ export const toggleFeatured = mutation({
     handler: async (ctx, args) => {
         await ctx.db.patch(args.id, { isFeatured: args.isFeatured });
     }
+});
+
+export const closeExpiredJobs = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const now = Date.now();
+        const activeJobs = await ctx.db
+            .query("jobs")
+            .filter((q) => q.eq(q.field("status"), "active"))
+            .collect();
+
+        let closedCount = 0;
+        console.log(`[Auto-Close] Checking ${activeJobs.length} active jobs... Now: ${new Date(now).toISOString()}`);
+        for (const job of activeJobs) {
+            if (job.applicationDeadline) {
+                // If deadline is in the past, close it
+                if (job.applicationDeadline < now) {
+                    console.log(`Closing job ${job._id} (Title: ${job.title}). Deadline: ${new Date(job.applicationDeadline).toISOString()}`);
+                    await ctx.db.patch(job._id, { status: "closed" });
+                    closedCount++;
+                } else {
+                    // Debug log to see close calls (remove later if too noisy)
+                    // console.log(`Job ${job._id} active. Expires in: ${((job.applicationDeadline - now) / 3600000).toFixed(2)} hours`);
+                }
+            }
+        }
+        if (closedCount > 0) console.log(`Auto-closed ${closedCount} expired jobs.`);
+    },
 });

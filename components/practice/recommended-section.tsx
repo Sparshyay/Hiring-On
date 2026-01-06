@@ -55,7 +55,7 @@ export function RecommendedSection({ searchQuery = "", category = "all" }: { sea
             <Carousel className="w-full">
                 <CarouselContent className="-ml-4 pb-4">
                     {recommendedTopics.map(({ topic, levels }) => (
-                        <CarouselItem key={topic} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                        <CarouselItem key={topic} className="pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                             <TestCard
                                 id={levels[0]._id} // Dummy ID
                                 title={topic}
@@ -63,8 +63,6 @@ export function RecommendedSection({ searchQuery = "", category = "all" }: { sea
                                 questions={levels.reduce((acc, curr) => acc + curr.questionsCount, 0)}
                                 duration={`${Math.max(...levels.map(l => l.duration))} mins`}
                                 difficulty={`${levels.length} Levels`}
-                                imageColor={levels[0].imageColor}
-                                compact={true} // Use smaller layout
                                 description={`Assess your ${topic} skills.`}
                                 onClick={() => router.push(`/practice/category/${encodeURIComponent(topic)}`)}
                             />

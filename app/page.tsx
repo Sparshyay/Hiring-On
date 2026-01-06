@@ -1,29 +1,12 @@
-import Image from "next/image";
-import { HeroSection } from "@/components/shared/hero-section";
-import { FeaturedJobs } from "@/components/shared/featured-jobs";
-import { TestimonialsCarousel } from "@/components/shared/testimonials-carousel";
-import { MockTestSection } from "@/components/landing/mock-test-section";
-import { MotivationalBanner } from "@/components/landing/motivational-banner";
-import { AdBanner } from "@/components/shared/ad-banner";
-import { RoleRedirect } from "@/components/auth/role-redirect";
+import { Suspense } from "react";
+import { LandingPageContent } from "@/components/landing-page-content";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <HeroSection />
-      <div className="container mx-auto px-4 py-8">
-        <AdBanner
-          title="Need guidance? Get Winning Tips From Top Mentors!"
-          subtitle="Connect with industry experts who have cracked the toughest interviews. Get personalized roadmap and mock interview feedback."
-          ctaText="Find a Mentor"
-          ctaLink="/mentorships"
-          variant="blue"
-        />
-      </div>
-      <FeaturedJobs />
-      <MockTestSection />
-      <MotivationalBanner />
-      <TestimonialsCarousel />
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <LandingPageContent />
+    </Suspense>
   );
 }

@@ -39,3 +39,36 @@ export const searchGlobal = query({
         return results;
     },
 });
+
+export const searchJobTitles = query({
+    args: { query: v.string() },
+    handler: async (ctx, args) => {
+        if (!args.query) return [];
+        return await ctx.db
+            .query("job_titles")
+            .withSearchIndex("search_title", (q) => q.search("title", args.query))
+            .take(10);
+    },
+});
+
+export const searchCompanies = query({
+    args: { query: v.string() },
+    handler: async (ctx, args) => {
+        if (!args.query) return [];
+        return await ctx.db
+            .query("companies")
+            .withSearchIndex("search_name", (q) => q.search("name", args.query))
+            .take(10);
+    },
+});
+
+export const searchLocations = query({
+    args: { query: v.string() },
+    handler: async (ctx, args) => {
+        if (!args.query) return [];
+        return await ctx.db
+            .query("locations")
+            .withSearchIndex("search_city", (q) => q.search("city", args.query))
+            .take(10);
+    },
+});

@@ -1,11 +1,12 @@
-"use client";
+import { Suspense } from "react";
+import { LoginPageContent } from "@/components/login-page-content";
 
-import { SignIn } from "@clerk/nextjs";
+export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <SignIn routing="path" path="/login" />
-        </div>
+        <Suspense fallback={<div>Loading login...</div>}>
+            <LoginPageContent />
+        </Suspense>
     );
 }

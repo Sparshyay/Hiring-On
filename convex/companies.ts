@@ -32,6 +32,11 @@ export const getById = query({
             .filter((q) => q.eq(q.field("companyId"), company._id))
             .collect();
 
+        const internships = await ctx.db
+            .query("internships")
+            .filter((q) => q.eq(q.field("companyId"), company._id))
+            .collect();
+
         // Fetch recruiter owner
         const recruiter = await ctx.db
             .query("recruiters")
@@ -41,6 +46,7 @@ export const getById = query({
         return {
             ...company,
             jobCount: jobs.length,
+            internshipCount: internships.length,
             recruiter: recruiter ? {
                 name: recruiter.name,
                 email: recruiter.email,

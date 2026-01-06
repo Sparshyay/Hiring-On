@@ -5,7 +5,9 @@ import { Navbar } from "@/components/shared/navbar";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu, Search, Bell } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({
     children,
@@ -41,15 +43,39 @@ export default function AdminLayout({
 
     return (
         <div className="flex flex-col min-h-screen bg-muted/20">
-            {/* Shared Navbar at the top */}
-            <Navbar />
+            {/* Shared Navbar at the top (Desktop Only) */}
+            <div className="hidden md:block">
+                <Navbar />
+            </div>
+
+            {/* Mobile Header for Admin */}
+            <div className="md:hidden bg-white border-b p-4 flex items-center justify-between sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="-ml-2"><Menu className="w-6 h-6" /></Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-[80%]">
+                            <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+                            <div className="h-full py-6">
+                                <AdminSidebar />
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                    <h1 className="font-bold text-lg">Admin</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon"><Search className="w-5 h-5 text-slate-500" /></Button>
+                    <Button variant="ghost" size="icon"><Bell className="w-5 h-5 text-slate-500" /></Button>
+                </div>
+            </div>
 
             <div className="flex flex-1 overflow-hidden">
-                <aside className="hidden w-64 md:block border-r bg-background overflow-y-auto">
+                <aside className="hidden md:block flex-shrink-0">
                     <AdminSidebar />
                 </aside>
 
-                <main className="flex-1 overflow-y-auto p-8">
+                <main className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8">
                     {children}
                 </main>
             </div>

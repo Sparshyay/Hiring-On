@@ -17,7 +17,9 @@ import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 
-export function ProfileSidebar() {
+import { cn } from "@/lib/utils";
+
+export function ProfileSidebar({ className }: { className?: string }) {
     const { signOut } = useClerk();
     const router = useRouter();
     const pathname = usePathname();
@@ -30,7 +32,7 @@ export function ProfileSidebar() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-20">
+        <div className={cn("space-y-6", className)}>
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
                 <div className="p-4 border-b border-border/40">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">For Users</h3>
@@ -38,14 +40,14 @@ export function ProfileSidebar() {
                 <div className="p-2 space-y-1">
                     {[
                         { label: "Profile", icon: Users, href: "/profile" },
-                        { label: "Registrations/Applications", icon: Users, href: "/profile/applications" },
+                        { label: "Registrations/Applications", icon: Layers, href: "/profile/applications" },
                         { label: "Watchlist", icon: Star, href: "/profile/watchlist" },
                         { label: "Bookmarked Questions", icon: Layers, href: "/profile/bookmarks" },
-                        { label: "Recently Viewed", icon: Clock },
-                        { label: "Mentor Sessions", icon: Users },
-                        { label: "Courses", icon: BookOpen },
-                        { label: "Certificates", icon: FileText },
-                        { label: "Settings", icon: Settings },
+                        { label: "Recently Viewed", icon: Clock, href: "/profile/recently-viewed" },
+                        { label: "Mentor Sessions", icon: Users, href: "/profile/mentorships" },
+                        { label: "Courses", icon: BookOpen, href: "/profile/courses" },
+                        { label: "Certificates", icon: FileText, href: "/profile/certificates" },
+                        { label: "Settings", icon: Settings, href: "/profile/settings" },
                     ].map((item: any, i) => (
                         <Button
                             key={i}

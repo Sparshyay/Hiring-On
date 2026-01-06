@@ -2,18 +2,24 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export function RoleRedirect() {
     const router = useRouter();
+    const pathname = usePathname();
     const user = useQuery(api.auth.getUser);
 
     useEffect(() => {
-        if (user && user.role === "recruiter") {
-            router.push("/recruiter");
+        if (user) {
+            if (user.role === "recruiter") {
+                // Allow recruiters to stay on home page
+            } else if ((user.role === "candidate" || user.role === "job_seeker") && pathname === "/sign-in") {
+                // Only redirect if explicitly on sign-in page, otherwise preserve intention
+                router.push("/");
+            }
         }
-    }, [user, router]);
+    }, [user, router, pathname]);
 
     return null;
 }

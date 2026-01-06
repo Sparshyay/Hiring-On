@@ -3,7 +3,7 @@ export const REACT_QUESTIONS = [
     {
         title: "React JS - Novice Level",
         category: "React.js",
-        difficulty: "Novice",
+        difficulty: "Beginner",
         questions: 10,
         duration: "15 mins",
         type: "standard",
@@ -75,7 +75,7 @@ export const REACT_QUESTIONS = [
     {
         title: "React JS - Easy Level",
         category: "React.js",
-        difficulty: "Easy",
+        difficulty: "Beginner",
         questions: 10,
         duration: "20 mins",
         type: "standard",
@@ -219,7 +219,7 @@ export const REACT_QUESTIONS = [
     {
         title: "React JS - Master Level",
         category: "React.js",
-        difficulty: "Master",
+        difficulty: "Expert",
         questions: 10,
         duration: "45 mins",
         type: "standard",

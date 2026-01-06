@@ -89,23 +89,30 @@ export const getMyApplications = query({
             .withIndex("by_user", (q) => q.eq("userId", user._id))
             .collect();
 
-        // Join with Job data
+        // Join with Job and Company data
         return await Promise.all(
             applications.map(async (app) => {
-                const job = await ctx.db.get(app.jobId);
+                const jobOrInternship = await ctx.db.get(app.jobId);
+                if (!jobOrInternship) return null;
+
+                const company = await ctx.db.get(jobOrInternship.companyId);
+
                 return {
                     ...app,
-                    job: job ? {
-                        _id: job._id,
-                        title: job.title,
-                        companyId: job.companyId,
-                        companyLogo: job.companyLogo,
-                        location: job.location,
-                        type: job.type,
+                    job: {
+                        _id: jobOrInternship._id,
+                        title: jobOrInternship.title,
+                        type: "stipend" in jobOrInternship ? "Internship" : "Job",
+                        location: jobOrInternship.location,
+                        status: jobOrInternship.status,
+                    },
+                    company: company ? {
+                        name: company.name,
+                        logo: company.logo,
                     } : null
                 };
             })
-        );
+        ).then(res => res.filter(Boolean).reverse()); // Newest first
     },
 });
 

@@ -1,9 +1,12 @@
-import { SignIn } from "@clerk/nextjs";
+import { Suspense } from "react";
+import { ClerkSignInContent } from "@/components/clerk-sign-in-content";
+
+export const dynamic = "force-dynamic";
 
 export default function Page() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <SignIn forceRedirectUrl="/" />
-        </div>
+        <Suspense fallback={<div>Loading sign in...</div>}>
+            <ClerkSignInContent />
+        </Suspense>
     );
 }

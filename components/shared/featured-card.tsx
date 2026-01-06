@@ -35,8 +35,8 @@ export function FeaturedCard({
     const href = variant === "internship" ? `/internships/${id}` : `/jobs/${id}`;
 
     return (
-        <Link href={href}>
-            <Card className="group relative overflow-hidden border border-slate-200 hover:border-slate-300 transition-all duration-300 hover:shadow-lg bg-white rounded-2xl h-[240px] flex flex-col">
+        <Link href={href} className="h-full block">
+            <Card className="group relative overflow-hidden border border-slate-200 hover:border-slate-300 transition-all duration-300 hover:shadow-lg bg-white rounded-2xl h-full min-h-[280px] flex flex-col">
                 {/* Colored Banner */}
                 <div className={cn("h-16 bg-gradient-to-r", bannerColor)} />
 

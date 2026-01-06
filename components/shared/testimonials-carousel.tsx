@@ -134,7 +134,7 @@ export function TestimonialsCarousel() {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -50 }}
                                     transition={{ duration: 0.4 }}
-                                    className={cn("h-full", idx === 1 ? "md:-mt-4 md:mb-4" : "")} // Staggered effect
+                                    className={cn("h-full", idx === 1 ? "md:-mt-4 md:mb-4" : "", idx > 0 ? "hidden md:block" : "")} // Staggered effect
                                 >
                                     <Card className="p-8 h-full rounded-2xl border-slate-100 shadow-lg hover:shadow-xl transition-shadow bg-white flex flex-col">
                                         <Quote className="w-10 h-10 text-blue-100 mb-6 fill-blue-100" />

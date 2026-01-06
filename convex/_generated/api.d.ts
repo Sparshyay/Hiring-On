@@ -16,6 +16,7 @@ import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as blogs from "../blogs.js";
 import type * as companies from "../companies.js";
+import type * as crons from "../crons.js";
 import type * as data_react_questions from "../data/react_questions.js";
 import type * as data_standard_topics from "../data/standard_topics.js";
 import type * as debug_tests from "../debug_tests.js";
@@ -28,6 +29,7 @@ import type * as jobs_mutations from "../jobs_mutations.js";
 import type * as master_data from "../master_data.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
+import type * as recommendations from "../recommendations.js";
 import type * as recruiters from "../recruiters.js";
 import type * as reset_sparsh from "../reset_sparsh.js";
 import type * as scripts from "../scripts.js";
@@ -38,6 +40,7 @@ import type * as seed_force from "../seed_force.js";
 import type * as seed_master_data from "../seed_master_data.js";
 import type * as seed_tests from "../seed_tests.js";
 import type * as tests from "../tests.js";
+import type * as user_actions from "../user_actions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -55,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   blogs: typeof blogs;
   companies: typeof companies;
+  crons: typeof crons;
   "data/react_questions": typeof data_react_questions;
   "data/standard_topics": typeof data_standard_topics;
   debug_tests: typeof debug_tests;
@@ -67,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   master_data: typeof master_data;
   migrations: typeof migrations;
   notifications: typeof notifications;
+  recommendations: typeof recommendations;
   recruiters: typeof recruiters;
   reset_sparsh: typeof reset_sparsh;
   scripts: typeof scripts;
@@ -77,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   seed_master_data: typeof seed_master_data;
   seed_tests: typeof seed_tests;
   tests: typeof tests;
+  user_actions: typeof user_actions;
   users: typeof users;
 }>;
 

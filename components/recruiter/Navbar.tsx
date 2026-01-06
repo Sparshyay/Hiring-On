@@ -42,8 +42,7 @@ export function RecruiterNavbar() {
             <div className="container flex h-28 items-center px-4">
                 <div className="mr-8 flex items-center space-x-4">
                     <Link href="/recruiter" className="flex items-center gap-0">
-                        <Image src="/logo.svg" alt="Logo" width={100} height={100} className="h-24 w-24" />
-                        <Image src="/hiring-on.svg" alt="HIRING-ON" width={300} height={100} className="h-28 w-auto" />
+                        <Image src="/logo-full.png" alt="Hiring On" width={500} height={150} className="h-28 w-auto object-contain" />
                         <span className="text-xs font-medium text-muted-foreground border px-2 py-0.5 rounded-full ml-2">
                             Recruiter
                         </span>

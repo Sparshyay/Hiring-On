@@ -1,11 +1,12 @@
-"use client";
+import { Suspense } from "react";
+import { SignupPageContent } from "@/components/signup-page-content";
 
-import { SignUp } from "@clerk/nextjs";
+export const dynamic = "force-dynamic";
 
 export default function SignupPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-            <SignUp routing="path" path="/signup" />
-        </div>
+        <Suspense fallback={<div>Loading signup...</div>}>
+            <SignupPageContent />
+        </Suspense>
     );
 }

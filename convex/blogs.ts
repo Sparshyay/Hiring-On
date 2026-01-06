@@ -4,28 +4,51 @@ import { v } from "convex/values";
 export const getAllBlogs = query({
     args: {},
     handler: async (ctx) => {
-        return await ctx.db.query("blogs").order("desc").collect();
+        const blogs = await ctx.db.query("blogs").order("desc").collect();
+        return await Promise.all(blogs.map(async (b) => {
+            let coverImage = b.coverImage;
+            if (coverImage && !coverImage.startsWith("http") && !coverImage.startsWith("data:")) { // data: for legacy or placeholders
+                coverImage = await ctx.storage.getUrl(coverImage) || coverImage;
+            }
+            return { ...b, coverImage };
+        }));
     },
 });
 
 export const getBySlug = query({
     args: { slug: v.string() },
     handler: async (ctx, args) => {
-        return await ctx.db
+        const blog = await ctx.db
             .query("blogs")
             .withIndex("by_slug", (q) => q.eq("slug", args.slug))
             .unique();
+
+        if (!blog) return null;
+
+        let coverImage = blog.coverImage;
+        if (coverImage && !coverImage.startsWith("http") && !coverImage.startsWith("data:")) {
+            coverImage = await ctx.storage.getUrl(coverImage) || coverImage;
+        }
+        return { ...blog, coverImage };
     },
 });
 
 export const getBlogsByAuthor = query({
     args: { authorId: v.string() },
     handler: async (ctx, args) => {
-        return await ctx.db
+        const blogs = await ctx.db
             .query("blogs")
             .withIndex("by_authorId", (q) => q.eq("authorId", args.authorId))
             .order("desc")
             .collect();
+
+        return await Promise.all(blogs.map(async (b) => {
+            let coverImage = b.coverImage;
+            if (coverImage && !coverImage.startsWith("http") && !coverImage.startsWith("data:")) {
+                coverImage = await ctx.storage.getUrl(coverImage) || coverImage;
+            }
+            return { ...b, coverImage };
+        }));
     }
 });
 

@@ -4,6 +4,42 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { MapPin, Building2, Clock, Briefcase, Share2, Heart, Users, Hourglass } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useState } from "react";
+
+function BookmarkButton({ id, type, className }: { id: string, type: string, className?: string }) {
+    const toggleBookmark = useMutation(api.user_actions.toggleBookmark);
+    const bookmarks = useQuery(api.user_actions.getBookmarks, { type });
+
+    // Check if bookmarked
+    const isBookmarked = bookmarks?.some(b => b.targetId === id) || false;
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleToggle = async (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent link navigation
+        e.stopPropagation();
+
+        setIsLoading(true);
+        try {
+            await toggleBookmark({ type, targetId: id });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleToggle}
+            disabled={isLoading}
+            className={cn("text-slate-400 hover:text-primary transition-colors z-10 p-1 rounded-full hover:bg-slate-100", className)}
+        >
+            <Heart className={cn("w-5 h-5", isBookmarked ? "fill-primary text-primary" : "")} />
+        </button>
+    );
+}
 
 interface JobCardProps {
     id: string;
@@ -19,6 +55,7 @@ interface JobCardProps {
     applicationDeadline?: number;
     postedAt?: number;
     isFeatured?: boolean;
+    bookmarkType?: string;
 }
 
 function getDaysLeft(deadline: number | undefined) {
@@ -40,7 +77,7 @@ function timeAgo(date: number | undefined) {
     return "Recently";
 }
 
-export function JobCard({ id, title, company, location, type, salary, salaryDuration, tags, variant = "grid", applicationDeadline, postedAt, isFeatured, logo }: JobCardProps) {
+export function JobCard({ id, title, company, location, type, salary, salaryDuration, tags, variant = "grid", applicationDeadline, postedAt, isFeatured, logo, bookmarkType = "job" }: JobCardProps) {
     // Mock data to match the UI requirement since backend doesn't provide all these yet
     const experience = "0-2 years";
     const postedDate = timeAgo(postedAt);
@@ -53,9 +90,8 @@ export function JobCard({ id, title, company, location, type, salary, salaryDura
         return (
             <Card className="group hover:bg-slate-50/50 transition-all duration-300 hover:shadow-md border-slate-200 hover:border-primary/20 p-5 flex flex-col sm:flex-row gap-5 relative bg-white">
                 {/* Save Button Absolute */}
-                <button className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors">
-                    <Heart className="w-5 h-5" />
-                </button>
+                {/* Save Button Absolute */}
+                <BookmarkButton id={id} type="job" className="absolute top-4 right-4" />
 
                 {/* Logo Section */}
                 <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl border border-slate-100 bg-white flex-shrink-0 flex items-center justify-center p-2 shadow-sm">
@@ -149,9 +185,8 @@ export function JobCard({ id, title, company, location, type, salary, salaryDura
                 {company && <div className="text-[10rem] font-bold text-slate-900 absolute -top-10 -right-10 select-none">{company[0]}</div>}
             </div>
 
-            <button className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors z-10">
-                <Heart className="w-5 h-5" />
-            </button>
+            {/* Save Button Absolute - Connected to Backend */}
+            <BookmarkButton id={id} type={bookmarkType} />
 
             {isFeatured && (
                 <div className="absolute top-0 left-0 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg z-10">

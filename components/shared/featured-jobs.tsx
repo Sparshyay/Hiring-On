@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { ScrollCarousel } from "./scroll-carousel";
 
 // Mock Jobs Data with company logos and colors
 const MOCK_INTERNSHIPS = [
@@ -125,6 +126,8 @@ export function FeaturedJobs() {
     const internships = MOCK_INTERNSHIPS;
     const jobs = MOCK_JOBS;
 
+    const itemClass = "min-w-[85vw] sm:min-w-[45%] md:min-w-[31%] lg:min-w-[23%] snap-center";
+
     return (
         <section className="py-20 bg-gradient-to-b from-white to-slate-50">
             <div className="container mx-auto px-4">
@@ -175,32 +178,37 @@ export function FeaturedJobs() {
                     </motion.div>
 
                     <motion.div
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-                        variants={containerVariants}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, margin: "-50px" }}
+                        variants={containerVariants}
                     >
-                        {internships.map((job, index) => (
-                            <motion.div
-                                key={job._id}
-                                variants={itemVariants}
-                                transition={{ duration: 0.5, ease: "easeOut" }}
-                            >
-                                <FeaturedCard
-                                    id={job._id}
-                                    title={job.title}
-                                    company={job.company.name}
-                                    location={job.location}
-                                    type={job.type}
-                                    salary={job.salary}
-                                    logo={job.company.logo}
-                                    logoColor={job.logoColor}
-                                    bannerColor={job.bannerColor}
-                                    variant="internship"
-                                />
-                            </motion.div>
-                        ))}
+                        <ScrollCarousel>
+                            {internships.map((job, index) => (
+                                <motion.div
+                                    key={job._id}
+                                    className={itemClass}
+                                    variants={itemVariants}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                >
+                                    <FeaturedCard
+                                        id={job._id}
+                                        title={job.title}
+                                        company={job.company.name}
+                                        location={job.location}
+                                        type={job.type}
+                                        salary={job.salary}
+                                        logo={job.company.logo}
+                                        logoColor={job.logoColor}
+                                        bannerColor={job.bannerColor}
+                                        variant="internship"
+                                    />
+                                </motion.div>
+                            ))}
+                        </ScrollCarousel>
                     </motion.div>
                 </div>
 
@@ -227,32 +235,37 @@ export function FeaturedJobs() {
                     </motion.div>
 
                     <motion.div
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-                        variants={containerVariants}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, margin: "-50px" }}
+                        variants={containerVariants}
                     >
-                        {jobs.map((job, index) => (
-                            <motion.div
-                                key={job._id}
-                                variants={itemVariants}
-                                transition={{ duration: 0.5, ease: "easeOut" }}
-                            >
-                                <FeaturedCard
-                                    id={job._id}
-                                    title={job.title}
-                                    company={job.company.name}
-                                    location={job.location}
-                                    type={job.type}
-                                    salary={job.salary}
-                                    logo={job.company.logo}
-                                    logoColor={job.logoColor}
-                                    bannerColor={job.bannerColor}
-                                    variant="job"
-                                />
-                            </motion.div>
-                        ))}
+                        <ScrollCarousel>
+                            {jobs.map((job, index) => (
+                                <motion.div
+                                    key={job._id}
+                                    className={itemClass}
+                                    variants={itemVariants}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                >
+                                    <FeaturedCard
+                                        id={job._id}
+                                        title={job.title}
+                                        company={job.company.name}
+                                        location={job.location}
+                                        type={job.type}
+                                        salary={job.salary}
+                                        logo={job.company.logo}
+                                        logoColor={job.logoColor}
+                                        bannerColor={job.bannerColor}
+                                        variant="job"
+                                    />
+                                </motion.div>
+                            ))}
+                        </ScrollCarousel>
                     </motion.div>
                 </div>
 

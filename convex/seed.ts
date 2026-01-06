@@ -277,7 +277,7 @@ export const seed = mutation({
             {
                 title: "Backend System Design",
                 category: "Engineering",
-                difficulty: "Advanced",
+                difficulty: "Expert",
                 duration: 60,
                 questionsCount: 5,
                 description: "Test your skills in designing scalable backend systems and databases.",
@@ -327,7 +327,7 @@ export const seed = mutation({
             {
                 title: "Personalized AI Assessment",
                 category: "AI Generated",
-                difficulty: "Adaptive",
+                difficulty: "Intermediate",
                 duration: 30,
                 questionsCount: 5,
                 description: "A dynamic assessment tailored to your specific profile and skill gaps.",

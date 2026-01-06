@@ -33,6 +33,20 @@ export default defineSchema({
         role: v.optional(v.string()), // "candidate"
         isRequestingAdmin: v.optional(v.boolean()), // For admin flow
 
+        // Onboarding & Strict Application Flow
+        onboardingStatus: v.optional(v.string()), // "pending", "completed", "skipped"
+        resumeMetadata: v.optional(v.object({
+            uploaded: v.boolean(),
+            source: v.optional(v.string()), // "pdf", "ai-generated"
+            parsed: v.optional(v.boolean()),
+            fileId: v.optional(v.string()), // storage ID
+        })),
+        profileStatus: v.optional(v.object({
+            autoFilled: v.boolean(),
+            confirmed: v.boolean(),
+            completionLevel: v.optional(v.number()), // 1, 2, 3
+        })),
+
         // Profile Data
         image: v.optional(v.string()),
         about: v.optional(v.string()),
@@ -43,6 +57,7 @@ export default defineSchema({
         // Resume Data
         resume: v.optional(v.string()),
         skills: v.optional(v.array(v.string())),
+        resumeData: v.optional(v.any()), // Stores JSON data for the Resume Builder
         experience: v.optional(v.array(v.any())),
         education: v.optional(v.array(v.any())),
         certificates: v.optional(v.array(v.any())),
@@ -83,6 +98,7 @@ export default defineSchema({
         dateOfBirth: v.optional(v.string()),
         currentAddress: v.optional(v.any()),
         permanentAddress: v.optional(v.any()),
+        differentlyAbled: v.optional(v.string()), // "Yes" or "No"
     }).index("by_token", ["tokenIdentifier"]).index("by_email", ["email"]).searchIndex("search_name", { searchField: "name" }),
 
     // Deprecated but kept for reference if needed during migration, or remove if comfortable.
@@ -241,7 +257,7 @@ export default defineSchema({
     tests: defineTable({
         title: v.string(),
         category: v.string(), // Aptitude, Coding, Company Mock, etc.
-        difficulty: v.string(), // Changed to v.string() to support "Novice", "Expert" etc.
+        difficulty: v.string(), // "Beginner", "Intermediate", "Expert"
         duration: v.number(), // in minutes
         questionsCount: v.number(),
         description: v.optional(v.string()),
@@ -251,6 +267,12 @@ export default defineSchema({
         imageColor: v.optional(v.string()),
         type: v.optional(v.string()), // "standard" | "ai_generated"
         status: v.string(), // Published, Draft
+        questions: v.optional(v.array(v.object({
+            type: v.string(),
+            question: v.string(),
+            options: v.optional(v.array(v.string())),
+            correct: v.string(),
+        }))),
     }),
 
     questions: defineTable({
@@ -263,7 +285,7 @@ export default defineSchema({
         marks: v.number(),
         // Question Bank Fields
         subject: v.optional(v.string()),
-        difficulty: v.optional(v.string()), // Beginner, Easy, Intermediate, Advanced, Expert
+        difficulty: v.optional(v.string()), // "Beginner", "Intermediate", "Expert"
         tags: v.optional(v.array(v.string())),
 
         // Coding specific
@@ -363,7 +385,7 @@ export default defineSchema({
             options: v.optional(v.array(v.string())), // for mcq
             isRequired: v.boolean(),
         }))),
-    }).index("by_company", ["companyId"]).searchIndex("search_title", { searchField: "title" }), // Added index for recruiter dashboard
+    }).index("by_company", ["companyId"]).searchIndex("search_title", { searchField: "title" }).index("by_status", ["status"]),
 
     // Internships (Mirrors Jobs)
     internships: defineTable({
@@ -408,7 +430,7 @@ export default defineSchema({
             options: v.optional(v.array(v.string())), // for mcq
             isRequired: v.boolean(),
         }))),
-    }).index("by_company", ["companyId"]).searchIndex("search_title", { searchField: "title" }),
+    }).index("by_company", ["companyId"]).searchIndex("search_title", { searchField: "title" }).index("by_status", ["status"]),
 
     // Banners
     banners: defineTable({
@@ -455,5 +477,28 @@ export default defineSchema({
         tags: v.array(v.string()),
         publishedAt: v.number(),
         isPublished: v.boolean(),
-    }).index("by_slug", ["slug"]).index("by_authorId", ["authorId"]),
+    }).searchIndex("search_title", { searchField: "title" })
+        .index("by_slug", ["slug"])
+        .index("by_authorId", ["authorId"]),
+
+    // Bookmarks & Watchlist
+    bookmarks: defineTable({
+        userId: v.string(), // Clerk ID or User ID (prefer consistent)
+        type: v.string(), // "job", "internship", "practice_paper", "question"
+        targetId: v.string(), // ID of the item
+        createdAt: v.number(),
+    }).index("by_user", ["userId"]).index("by_user_type", ["userId", "type"]).index("by_target", ["targetId", "userId"]), // Compound for quick check
+
+    // Recently Viewed History
+    recentlyViewed: defineTable({
+        userId: v.string(),
+        type: v.string(), // "job", "internship"
+        targetId: v.string(),
+        viewedAt: v.number(),
+        metadata: v.optional(v.object({
+            title: v.string(),
+            subtitle: v.optional(v.string()), // Company or Category
+            link: v.string(),
+        })),
+    }).index("by_user", ["userId"]).index("by_user_type", ["userId", "type"]),
 });
