@@ -61,6 +61,38 @@ export const getRecentActivities = query({
     },
 });
 
+export const getBadgeCounts = query({
+    args: { companyId: v.optional(v.id("companies")) },
+    handler: async (ctx, args) => {
+        if (!args.companyId) return { applications: 0 };
+
+        const jobs = await ctx.db
+            .query("jobs")
+            .withIndex("by_company", (q) => q.eq("companyId", args.companyId!))
+            .collect();
+
+        const internships = await ctx.db
+            .query("internships")
+            .withIndex("by_company", (q) => q.eq("companyId", args.companyId!))
+            .collect();
+
+        const allPostIds = [...jobs, ...internships].map(j => j._id);
+
+        let unreadCount = 0;
+
+        for (const jobId of allPostIds) {
+            const apps = await ctx.db
+                .query("applications")
+                .withIndex("by_job", (q) => q.eq("jobId", jobId))
+                .collect();
+
+            unreadCount += apps.filter(a => !a.isViewed).length;
+        }
+
+        return { applications: unreadCount };
+    },
+});
+
 export const getAllRecruiters = query({
     args: {},
     handler: async (ctx) => {
@@ -87,6 +119,21 @@ export const verifyRecruiter = mutation({
     args: { userId: v.id("recruiters"), status: v.string() }, // status: "verified" | "rejected"
     handler: async (ctx, args) => {
         await ctx.db.patch(args.userId, { verificationStatus: args.status });
+
+        // Add Notification
+        const recruiter = await ctx.db.get(args.userId);
+        if (recruiter) {
+            await ctx.db.insert("notifications", {
+                userId: args.userId as any, // Cast to avoid strict type mismatch if schema expects string vs ID
+                title: args.status === "verified" ? "Profile Verified" : "Profile Rejected",
+                message: args.status === "verified"
+                    ? "Congratulations! Your recruiter profile has been verified. You can now start posting jobs."
+                    : "Your recruiter application was not approved. Please review your details or contact support.",
+                type: args.status === "verified" ? "success" : "error",
+                isRead: false,
+                createdAt: Date.now(),
+            });
+        }
     },
 });
 
@@ -193,19 +240,49 @@ export const completeOnboarding = mutation({
             });
         }
 
-        const recruiter = await ctx.db
+        let recruiter = await ctx.db
             .query("recruiters")
             .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
             .unique();
 
-        if (!recruiter) throw new Error("Recruiter not found");
-
-        await ctx.db.patch(recruiter._id, {
-            companyId: companyId,
-            verificationStatus: "pending",
-            plan: "free",
-        });
+        if (!recruiter) {
+            // Create new pending recruiter record
+            await ctx.db.insert("recruiters", {
+                name: identity.name || args.name,
+                email: args.email, // Use company email or identity email? Identity is safer for auth.
+                tokenIdentifier: identity.tokenIdentifier,
+                role: "recruiter",
+                companyId: companyId,
+                verificationStatus: "pending",
+                plan: "free",
+                image: identity.pictureUrl,
+            });
+        } else {
+            await ctx.db.patch(recruiter._id, {
+                companyId: companyId,
+                verificationStatus: "pending",
+                plan: "free",
+            });
+        }
 
         return "success";
     },
 });
+
+export const getCurrentRecruiter = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return null;
+
+        const recruiter = await ctx.db
+            .query("recruiters")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .first();
+
+        if (!recruiter) return null;
+
+        return recruiter;
+    },
+});
+// Trigger rebuild

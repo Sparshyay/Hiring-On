@@ -25,14 +25,15 @@ export const getUser = query({
             return { ...admin, role: "admin", _id: admin._id };
         }
 
-        // 2. Check Recruiters
+        // 2. Check Recruiters (Strictly Verified Only)
+        // If a recruiter is "pending", they should fall through to Job Seeker check
+        // so they can use the app as a candidate while waiting.
         const recruiter = await ctx.db
             .query("recruiters")
             .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
             .unique();
 
-        if (recruiter) {
-            // Recruiter might have a custom verification status
+        if (recruiter && recruiter.verificationStatus === "verified") {
             return { ...recruiter, role: "recruiter", _id: recruiter._id };
         }
 
@@ -53,7 +54,17 @@ export const getUser = query({
                 }
             }
 
-            return { ...jobSeeker, resume: resumeUrl, role: "candidate", _id: jobSeeker._id };
+            // Inject pending status if they have a pending recruiter application
+            const isPending = recruiter && recruiter.verificationStatus === "pending";
+
+            return {
+                ...jobSeeker,
+                resume: resumeUrl,
+                role: "candidate",
+                _id: jobSeeker._id,
+                hasPendingRecruiterRequest: isPending,
+                recruiterStatus: recruiter?.verificationStatus
+            };
         }
 
         // Not found in any table (New User)
@@ -108,43 +119,73 @@ export const syncUser = mutation({
             return existingAdmin._id;
         }
 
-        // Case B: Intent = Recruiter
+        // Case B: Intent = Recruiter (Host Button Clicked)
         if (requestedRole === "recruiter") {
-            if (existingJobSeeker) {
-                // COLLISION DETECTED: Soft handle
-                // Return existing ID to allow frontend to redirect to Job Seeker Dashboard
-                return existingJobSeeker._id;
+            // Logic Change: Even if they want to be a recruiter, we ensure they have a Job Seeker profile
+            // because they remain a Job Seeker until approved.
+
+            let jobSeekerId = existingJobSeeker?._id;
+
+            // 1. Ensure Job Seeker Profile Exists
+            if (!existingJobSeeker) {
+                jobSeekerId = await ctx.db.insert("job_seekers", {
+                    name: identity.name || "User",
+                    email: email,
+                    tokenIdentifier: identity.tokenIdentifier,
+                    role: "candidate",
+                    resume: "",
+                    skills: [],
+                    experience: [],
+                    education: [],
+                    certificates: [],
+                    projects: [],
+                    achievements: [],
+                    responsibilities: [],
+                    hobbies: [],
+                    onboardingStatus: "pending",
+                    resumeMetadata: { uploaded: false, parsed: false },
+                    profileStatus: { autoFilled: false, confirmed: false, completionLevel: 0 },
+                    image: identity.pictureUrl,
+                });
             }
-            if (existingRecruiter) {
-                // Update token if needed
-                if (existingRecruiter.tokenIdentifier !== identity.tokenIdentifier) {
-                    await ctx.db.patch(existingRecruiter._id, { tokenIdentifier: identity.tokenIdentifier });
-                }
+
+            // 2. Ensure Recruiter Profile Exists (Pending)
+            if (!existingRecruiter) {
+                await ctx.db.insert("recruiters", {
+                    name: identity.name || "Recruiter",
+                    email: email,
+                    tokenIdentifier: identity.tokenIdentifier,
+                    companyId: undefined, // Will be set in onboarding
+                    verificationStatus: "pending", // Default to pending
+                    plan: "free",
+                    image: identity.pictureUrl,
+                });
+            } else if (existingRecruiter.tokenIdentifier !== identity.tokenIdentifier) {
+                await ctx.db.patch(existingRecruiter._id, { tokenIdentifier: identity.tokenIdentifier });
+            }
+
+            // Return Job Seeker ID so they log in as Candidate initially
+            // Only return Recruiter ID if they are ALREADY verified
+            if (existingRecruiter && existingRecruiter.verificationStatus === "verified") {
                 return existingRecruiter._id;
             }
-            // Create new Recruiter
-            // (Note: In a real app, we might want separate "create" mutation, but syncUser handles it here for simplicity)
-            // Recruiters are "pending" by default
-            return await ctx.db.insert("recruiters", {
-                name: identity.name || "Recruiter",
-                email: email,
-                tokenIdentifier: identity.tokenIdentifier,
-                companyId: undefined, // Will be set in onboarding
-                verificationStatus: "pending",
-                plan: "free",
-                image: identity.pictureUrl,
-            });
+
+            return jobSeekerId;
         }
 
         // Case C: Intent = Candidate (Job Seeker)
         if (requestedRole === "candidate" || requestedRole === "jobseeker") {
-            if (existingRecruiter) {
-                // COLLISION DETECTED: Soft handle
-                // Return existing ID to allow frontend to redirect to Recruiter Dashboard
-                return existingRecruiter._id;
+            // Even if they are a verified recruiter, if they explicitly asked for candidate?
+            // For now, let's keep the persistence logic simple.
+
+            if (existingRecruiter && existingRecruiter.verificationStatus === "verified") {
+                // If they are a verified recruiter, they should probably log in as one?
+                // Or maybe we support dual login later. For now, prioritize verified recruiter access
+                // to avoid locking them out of dashboard.
+                // return existingRecruiter._id;
             }
+
             if (existingJobSeeker) {
-                // Update token if needed
                 if (existingJobSeeker.tokenIdentifier !== identity.tokenIdentifier) {
                     await ctx.db.patch(existingJobSeeker._id, { tokenIdentifier: identity.tokenIdentifier });
                 }
@@ -169,7 +210,7 @@ export const syncUser = mutation({
             });
         }
 
-        // Case D: Intent = Admin (Only allows logging into existing admin)
+        // Case D: Intent = Admin
         if (requestedRole === "admin") {
             throw new Error("Access Denied: Not an administrator.");
         }

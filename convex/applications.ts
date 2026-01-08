@@ -205,20 +205,33 @@ export const updateStatus = mutation({
             status: args.status,
         });
 
-        // Trigger Notification
-        if (args.status === "Shortlisted") {
+        // Trigger Notification on Status Change
+        if (args.status !== application.status) {
             const job = await ctx.db.get(application.jobId);
             if (job) {
-                // We use internal mutation call or direct insert if in same file. 
-                // Since notifications is separate, best to just insert directly here for speed/transaction safety 
-                // OR call the mutation if possible (but mutation-in-mutation needs 'ctx.runMutation' if exposed, or just helper).
-                // Direct insert is easiest since we are in a mutation.
+                const company = await ctx.db.get(job.companyId);
+                const companyName = company ? company.name : "the company";
+
+                let message = `Your application status for ${job.title} at ${companyName} has been updated to ${args.status}.`;
+                let type = "info";
+
+                if (args.status === "Shortlisted") {
+                    message = `Congratulations! You have been shortlisted for ${job.title} at ${companyName}!`;
+                    type = "success";
+                } else if (args.status === "Rejected") {
+                    message = `Update on your application for ${job.title} at ${companyName}.`;
+                    // type = "error"; // Keeping info or error? Error might be too harsh visually if red badge is default. "info" or neutral.
+                    type = "info";
+                } else if (args.status.includes("Interview")) {
+                    message = `Great news! An interview has been scheduled for ${job.title} at ${companyName}.`;
+                    type = "success";
+                }
 
                 await ctx.db.insert("notifications", {
-                    userId: application.userId, // Candidate ID
-                    type: "shortlist",
-                    message: `You have been shortlisted for ${job.title} at ${job.companyId /* We might want company name, but ID is what we have handy. Fetching company is better */}!`,
-                    link: `/dashboard/applications`, // Or wherever candidates view status
+                    userId: application.userId,
+                    type: type,
+                    message: message,
+                    link: `/profile/applications`,
                     isRead: false,
                     createdAt: Date.now(),
                 });

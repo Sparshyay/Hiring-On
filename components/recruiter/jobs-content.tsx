@@ -37,7 +37,9 @@ import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
 
 export function RecruiterJobsContent() {
-    const jobs = useQuery(api.jobs.get, { limit: 50 });
+    const recruiter = useQuery(api.recruiters.getCurrentRecruiter);
+    // @ts-ignore
+    const jobs = useQuery(api.jobs.getRecruiterJobs, { companyId: recruiter?.companyId }) || [];
     const updateJobStatus = useMutation(api.jobs.updateStatus);
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -140,7 +142,7 @@ export function RecruiterJobsContent() {
                                                 <MousePointer className="w-4 h-4" /> <span>{job.clicks || 0}</span>
                                             </div>
                                             <div className="flex items-center gap-1 font-medium text-slate-700 title='Applicants'">
-                                                <Users className="w-4 h-4" /> <span>0 Applicants</span>
+                                                <Users className="w-4 h-4" /> <span>{job.applicationCount || 0} Applicants</span>
                                             </div>
                                             <span className="text-xs ml-auto text-slate-400">Posted {timeAgo(job.postedAt)}</span>
                                         </div>

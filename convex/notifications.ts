@@ -106,3 +106,37 @@ export const create = mutation({
         });
     },
 });
+
+export const getBadgeCounts = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return { notifications: 0 };
+        const token = identity.tokenIdentifier;
+
+        let userId = null;
+        const recruiter = await ctx.db
+            .query("recruiters")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
+            .unique();
+
+        if (recruiter) userId = recruiter._id;
+        else {
+            const jobSeeker = await ctx.db
+                .query("job_seekers")
+                .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
+                .unique();
+            if (jobSeeker) userId = jobSeeker._id;
+        }
+
+        if (!userId) return { notifications: 0 };
+
+        const unread = await ctx.db
+            .query("notifications")
+            .withIndex("by_user", (q) => q.eq("userId", userId as string))
+            .filter(q => q.eq(q.field("isRead"), false))
+            .collect();
+
+        return { notifications: unread.length };
+    }
+});

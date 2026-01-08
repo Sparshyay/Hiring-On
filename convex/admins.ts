@@ -78,3 +78,29 @@ export const removeAdmin = mutation({
         await ctx.db.delete(args.id);
     },
 });
+
+export const getBadgeCounts = query({
+    args: {},
+    handler: async (ctx) => {
+        const pendingRecruiters = await ctx.db
+            .query("recruiters")
+            .filter((q) => q.eq(q.field("verificationStatus"), "pending"))
+            .collect();
+
+        const pendingCompanies = await ctx.db
+            .query("companies")
+            .filter((q) => q.eq(q.field("status"), "Pending"))
+            .collect();
+
+        const pendingJobs = await ctx.db
+            .query("jobs")
+            .filter((q) => q.eq(q.field("status"), "Pending"))
+            .collect();
+
+        return {
+            recruiters: pendingRecruiters.length,
+            companies: pendingCompanies.length,
+            jobs: pendingJobs.length,
+        };
+    },
+});

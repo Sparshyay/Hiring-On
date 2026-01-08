@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 // Mock Data for Suggestions
 const JOB_SUGGESTIONS = ["Software Engineer", "Product Manager", "Data Scientist", "UX Designer", "Frontend Developer", "Backend Developer", "DevOps Engineer", "Marketing Manager"];
 const INTERNSHIP_SUGGESTIONS = ["Frontend Intern", "Marketing Intern", "Design Intern", "Data Science Intern", "Product Intern", "Sales Intern"];
-const LOCATION_SUGGESTIONS = ["Bangalore, India", "Mumbai, Maharashtra", "Delhi, NCR", "Hyderabad, Telangana", "Pune, Maharashtra", "Chennai, Tamil Nadu", "Remote"];
+const LOCATION_SUGGESTIONS = ["Bangalore, India", "Mumbai, Maharashtra", "Delhi, NCR", "Hyderabad, Telangana", "Pune, Maharashtra", "Chennai, Tamil Nadu", "Bhopal, Madhya Pradesh", "Indore, Madhya Pradesh", "Jabalpur, Madhya Pradesh", "Gwalior, Madhya Pradesh", "Nagpur, Maharashtra", "Ujjain, Madhya Pradesh", "Rewa, Madhya Pradesh", "Satna, Madhya Pradesh", "Remote"];
 
 export function HeroSection() {
     const router = useRouter();

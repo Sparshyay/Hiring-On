@@ -29,7 +29,7 @@ enum PostJobStep {
 export function PostJobContent() {
     const router = useRouter();
     const createJob = useMutation(api.jobs.create);
-    const companies = useQuery(api.companies.search, { query: "" }) || []; // Simplification for MVP
+    const recruiter = useQuery(api.recruiters.getCurrentRecruiter);
 
     const [currentStep, setCurrentStep] = useState<PostJobStep>(PostJobStep.BASICS);
     const [isLoading, setIsLoading] = useState(false);
@@ -122,7 +122,7 @@ export function PostJobContent() {
         setIsLoading(true);
         try {
             // Fallback for company (MVP)
-            const companyIdToUse = formData.companyId || (companies.length > 0 ? companies[0]._id : "");
+            const companyIdToUse = formData.companyId || recruiter?.companyId;
 
             if (!companyIdToUse) {
                 alert("Please select a company (or ensure one exists)");

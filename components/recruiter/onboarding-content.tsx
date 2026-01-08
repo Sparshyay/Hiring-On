@@ -33,11 +33,24 @@ export function OnboardingContent() {
     const user = rawUser as any;
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Auto-forward if user already has a company logic
-    // We check if user.companyId is present.
-    // REMOVED legacy redirect to plans. 
-    // New flow: if companyId exists, layout handles redirect to pending/dashboard.
-    // If we are here, we are filling details.
+    // Auto-forward logic
+    useEffect(() => {
+        if (!user) return;
+
+        if (isRecruiter) {
+            router.push("/recruiter");
+            return;
+        }
+
+        if (user.hasPendingRecruiterRequest) {
+            router.push("/recruiter/pending");
+            return;
+        }
+
+        // If they have a company linked but are not verified/pending (rare edge case), 
+        // we might want to check verificationStatus directly if available on jobseeker object? 
+        // But getUser separates them. The 'hasPendingRecruiterRequest' flag handles the pending case.
+    }, [user, isRecruiter, router]);
 
     const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof companySchema>>({
         resolver: zodResolver(companySchema),

@@ -324,6 +324,7 @@ export default defineSchema({
     // Notifications (New)
     notifications: defineTable({
         userId: v.string(),
+        title: v.optional(v.string()),
         type: v.string(), // "application", "shortlist", "system"
         message: v.string(),
         link: v.optional(v.string()),
@@ -461,6 +462,7 @@ export default defineSchema({
         }))),
         notes: v.optional(v.string()), // Internal Recruiter Notes
         feedback: v.optional(v.string()), // Candidate facing feedback
+        isViewed: v.optional(v.boolean()),
     }).index("by_job", ["jobId"]).index("by_user", ["userId"]),
 
     // Blogs

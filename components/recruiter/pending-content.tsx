@@ -12,14 +12,17 @@ export function PendingVerificationContent() {
     const router = useRouter();
 
     useEffect(() => {
-        if (user?.verificationStatus === "verified") {
+        const status = user?.verificationStatus || user?.recruiterStatus;
+        if (status === "verified") {
             router.push("/recruiter");
         }
-    }, [user?.verificationStatus, router]);
+    }, [user, router]);
 
-    if (isLoading || user?.verificationStatus === "verified") return null;
+    const status = user?.verificationStatus || user?.recruiterStatus;
 
-    if (user?.verificationStatus === "rejected") {
+    if (isLoading || status === "verified") return null;
+
+    if (status === "rejected") {
         return (
             <div className="flex flex-col items-center justify-center min-h-[80vh] text-center p-4">
                 <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6">

@@ -16,11 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { format } from "date-fns";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { useState } from "react";
+import { JobDetailModal } from "@/components/admin/job-detail-modal";
 
 export function JobsMonitorContent() {
     const jobs = useQuery(api.jobs.getAllJobsAdmin);
     const [searchQuery, setSearchQuery] = useState("");
     const [filters, setFilters] = useState<Record<string, string>>({});
+    const [selectedJob, setSelectedJob] = useState<any>(null);
 
     const filteredJobs = jobs?.filter(job => {
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,7 +84,11 @@ export function JobsMonitorContent() {
                         </TableHeader>
                         <TableBody>
                             {filteredJobs?.map((job) => (
-                                <TableRow key={job._id}>
+                                <TableRow
+                                    key={job._id}
+                                    className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                    onClick={() => setSelectedJob(job)}
+                                >
                                     <TableCell className="font-medium">{job.title}</TableCell>
                                     <TableCell>{job.companyName}</TableCell>
                                     <TableCell>{job.location}</TableCell>
@@ -126,6 +132,12 @@ export function JobsMonitorContent() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <JobDetailModal
+                job={selectedJob}
+                isOpen={!!selectedJob}
+                onClose={() => setSelectedJob(null)}
+            />
         </div>
     );
 }

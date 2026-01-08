@@ -23,6 +23,11 @@ export const get = query({
         const jobsWithCompany = await Promise.all(
             jobs.map(async (job) => {
                 const company = await ctx.db.get(job.companyId);
+                const applicationCount = (await ctx.db
+                    .query("applications")
+                    .withIndex("by_job", (q) => q.eq("jobId", job._id))
+                    .collect()).length;
+
                 let logoUrl = null;
                 if (job.companyLogo) {
                     try {
@@ -41,12 +46,56 @@ export const get = query({
                 return {
                     ...job,
                     company: company ? { ...company, logoUrl } : null,
-                    logoUrl
+                    logoUrl,
+                    applicationCount
                 };
             })
         );
 
         return jobsWithCompany;
+    },
+});
+
+export const getRecruiterJobs = query({
+    args: { companyId: v.optional(v.id("companies")) },
+    handler: async (ctx, args) => {
+        if (!args.companyId) return [];
+
+        const jobs = await ctx.db
+            .query("jobs")
+            .withIndex("by_company", (q) => q.eq("companyId", args.companyId!))
+            .order("desc")
+            .collect();
+
+        const jobsWithStats = await Promise.all(
+            jobs.map(async (job) => {
+                const company = await ctx.db.get(job.companyId);
+                const applicationCount = (await ctx.db
+                    .query("applications")
+                    .withIndex("by_job", (q) => q.eq("jobId", job._id))
+                    .collect()).length;
+
+                let logoUrl = null;
+                if (job.companyLogo) {
+                    try {
+                        logoUrl = await ctx.storage.getUrl(job.companyLogo);
+                    } catch (e) { }
+                } else if (company?.logo) {
+                    try {
+                        logoUrl = await ctx.storage.getUrl(company.logo);
+                    } catch (e) { }
+                }
+
+                return {
+                    ...job,
+                    company: company ? { ...company, logoUrl } : null,
+                    logoUrl,
+                    applicationCount
+                };
+            })
+        );
+
+        return jobsWithStats;
     },
 });
 

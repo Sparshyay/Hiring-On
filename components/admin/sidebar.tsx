@@ -1,5 +1,5 @@
-"use client";
-
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ const sidebarGroups = [
 export function AdminSidebar() {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const badges = useQuery(api.admins.getBadgeCounts);
 
     // Auto-collapse logic (similar to PracticeSidebar)
     useEffect(() => {
@@ -124,7 +125,14 @@ export function AdminSidebar() {
                                                                 : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                                                         )}
                                                     >
-                                                        <item.icon className="h-5 w-5" />
+                                                        <div className="relative">
+                                                            <item.icon className="h-5 w-5" />
+                                                            {((item.name === "Recruiters" && (badges?.recruiters ?? 0) > 0) ||
+                                                                (item.name === "Companies" && (badges?.companies ?? 0) > 0) ||
+                                                                (item.name === "Jobs" && (badges?.jobs ?? 0) > 0)) && (
+                                                                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full border border-white" />
+                                                                )}
+                                                        </div>
                                                     </Link>
                                                 </TooltipTrigger>
                                                 <TooltipContent side="right">{item.name}</TooltipContent>
@@ -147,7 +155,29 @@ export function AdminSidebar() {
                                             <div className={cn("p-1.5 rounded-full", isActive ? "bg-white/20" : "bg-slate-100 group-hover:bg-slate-200")}>
                                                 <item.icon className="h-4 w-4" />
                                             </div>
-                                            <span>{item.name}</span>
+                                            <div className="flex-1 flex items-center justify-between min-w-0">
+                                                <span>{item.name}</span>
+                                                {item.name === "Recruiters" && (badges?.recruiters ?? 0) > 0 && (
+                                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                                                        {badges?.recruiters}
+                                                    </span>
+                                                )}
+                                                {item.name === "Companies" && (badges?.companies ?? 0) > 0 && (
+                                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                                                        {badges?.companies}
+                                                    </span>
+                                                )}
+                                                {item.name === "Jobs" && (badges?.jobs ?? 0) > 0 && (
+                                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                                                        {badges?.jobs}
+                                                    </span>
+                                                )}
+                                                {item.name === "Jobs" && (badges?.jobs ?? 0) > 0 && (
+                                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                                                        {badges?.jobs}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </Link>
                                     );
                                 })}

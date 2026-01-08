@@ -16,6 +16,8 @@ import {
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 import { cn } from "@/lib/utils";
 
@@ -23,6 +25,7 @@ export function ProfileSidebar({ className }: { className?: string }) {
     const { signOut } = useClerk();
     const router = useRouter();
     const pathname = usePathname();
+    const badges = useQuery(api.notifications.getBadgeCounts);
 
     const handleLogout = async () => {
         await signOut();
@@ -40,7 +43,7 @@ export function ProfileSidebar({ className }: { className?: string }) {
                 <div className="p-2 space-y-1">
                     {[
                         { label: "Profile", icon: Users, href: "/profile" },
-                        { label: "Registrations/Applications", icon: Layers, href: "/profile/applications" },
+                        { label: "Registrations/Applications", icon: Layers, href: "/profile/applications", badge: (badges?.notifications || 0) > 0 ? badges?.notifications : undefined },
                         { label: "Watchlist", icon: Star, href: "/profile/watchlist" },
                         { label: "Bookmarked Questions", icon: Layers, href: "/profile/bookmarks" },
                         { label: "Recently Viewed", icon: Clock, href: "/profile/recently-viewed" },

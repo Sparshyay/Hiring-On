@@ -204,7 +204,7 @@ export function Navbar() {
                         )}
 
                         <Button asChild variant="ghost" className="rounded-full text-[#234B73] font-bold hover:bg-blue-50">
-                            <Link href="/auth/recruiter">Host</Link>
+                            <Link href="/recruiter/onboarding">Host</Link>
                         </Button>
                         <div className="h-6 w-px bg-slate-200" />
 
